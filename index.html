@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PikaBot LLM Benchmark v5 — Results</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a14;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding-bottom:60px}
+a{color:#60a5fa}
+.topbar{background:#10111c;border:1px solid #1e293b;border-radius:10px;padding:12px 20px;font-size:0.72rem;color:#7c8898;display:flex;justify-content:space-between;align-items:center;gap:12px;max-width:1360px;margin:16px auto 0;box-sizing:border-box}
+.topbar a{color:#60a5fa;text-decoration:none}
+.topbar .pill{background:#10111c;border:1px solid #1e293b;border-radius:6px;padding:4px 10px;display:inline-flex;align-items:center;gap:6px}
+.wrap{max-width:1400px;margin:0 auto;padding:28px 20px}
+.hdr h1{font-size:1.9rem;font-weight:900;background:linear-gradient(135deg,#60a5fa 0%,#c084fc 50%,#34d399 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+.hdr .sub{font-size:0.78rem;color:#94a3b8;margin-bottom:28px}
+.sec-title{font-size:0.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#94a3b8;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #1e293b}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:32px;padding-top:10px}
+@media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}}
+/* Multi-dim */
+.mdsec{display:grid;grid-template-columns:420px 1fr;gap:16px;align-items:start;margin-bottom:32px}
+.mdsec>*:nth-child(2){min-width:0;overflow:hidden}
+@media(max-width:800px){.mdsec{grid-template-columns:1fr}}
+.mdbox{background:#10111c;border:1px solid #1f2937;border-radius:10px;padding:10px 14px;height:580px;overflow:hidden}
+.md-title{font-size:0.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#64748b;margin-bottom:4px}
+.md-sub{font-size:0.6rem;color:#374151;margin-bottom:2px}
+.rlegend{display:flex;flex-wrap:wrap;gap:4px 10px;margin-bottom:10px}
+.rleg{font-size:0.75rem;color:#bcc3cf;display:flex;align-items:center;gap:4px;font-weight:500}
+.rdot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.cat-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cat-title{font-size:0.85rem;font-weight:600;color:#9ca3af}
+.cat-nav{display:flex;align-items:center;gap:8px}
+.cat-btn{background:#1e293b;border:1px solid #334155;color:#94a3b8;border-radius:6px;padding:3px 10px;cursor:pointer;font-size:1rem;line-height:1}
+.cat-btn:disabled{opacity:0.3;cursor:default}
+.cat-range{font-size:0.65rem;color:#7c8898;min-width:52px;text-align:center}
+.tscroll{overflow-x:scroll;overflow-y:hidden;background:#10111c;border:1px solid #1f2937;border-radius:10px;max-width:100%;display:block}
+.tscroll::-webkit-scrollbar{height:12px}
+.tscroll::-webkit-scrollbar-track{background:#0d1424;border-radius:6px}
+.tscroll::-webkit-scrollbar-thumb{background:#334155;border-radius:6px;border:2px solid #0d1424}
+.tscroll::-webkit-scrollbar-thumb:hover{background:#475569}
+.tscroll{scrollbar-width:auto;scrollbar-color:#334155 #0d1424}
+.ctab{border-collapse:collapse;font-size:0.68rem;white-space:nowrap}
+.ctab th{background:#0a0a14;color:#7c8898;font-weight:600;padding:10px 10px;text-align:center;font-size:0.68rem;min-width:140px}
+.ctab th.ch{text-align:left;position:sticky;left:0;background:#0a0a14;z-index:2;min-width:80px;padding-left:10px}
+.ctab td{padding:12px 10px;border-bottom:1px solid #0d1424;text-align:center}
+.ctab td.cn{text-align:left;position:sticky;left:0;background:#10111c;color:#9ca3af;padding-left:10px;z-index:1;font-size:0.72rem}
+.ctab tr:hover td{background:#152032} .ctab tr:hover td.cn{background:#152032}
+/* Findings */
+.falert{background:#10111c;border:1px solid #854d0e;border-radius:8px;padding:10px 14px;font-size:0.75rem;color:#fcd34d;margin-bottom:14px}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:32px}
+@media(max-width:700px){.fgrid{grid-template-columns:1fr}}
+.fcard{background:#10111c;border:1px solid #1f2937;border-radius:10px;padding:18px 20px}
+.fg{border-left:3px solid #4ade80}.fb{border-left:3px solid #60a5fa}.fc{border-left:3px solid #22d3ee}.fy{border-left:3px solid #fbbf24}.fo{border-left:3px solid #f97316}.fr{border-left:3px solid #f87171}
+.ftag{font-size:0.62rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px;color:#7c8898}
+.fcard.fy .ftag{color:#fbbf24}.fcard.fc .ftag{color:#22d3ee}.fcard.fo .ftag{color:#f97316}.fcard.fr .ftag{color:#f87171}.fcard.fg .ftag{color:#4ade80}.fcard.fb .ftag{color:#60a5fa}
+.ftitle{font-size:0.9rem;font-weight:700;margin-bottom:10px}.ftitle.g{color:#4ade80}.ftitle.b{color:#60a5fa}.ftitle.c{color:#22d3ee}.ftitle.y{color:#fbbf24}.ftitle.o{color:#f97316}.ftitle.r{color:#f87171}
+.fbody{font-size:0.78rem;color:#6b7280;line-height:1.7}
+/* Latency */
+.lgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:32px}
+@media(max-width:900px){.lgrid{grid-template-columns:repeat(2,1fr)}}
+.lnotice{font-size:0.68rem;color:#7c8898;margin-bottom:12px;padding:6px 10px;background:#10111c;border-radius:6px;border-left:2px solid #1e293b}
+/* Scatter */
+.sbox{background:#10111c;border:1px solid #1f2937;border-radius:10px;padding:18px;margin-bottom:32px}
+.scorebox{background:#10111c;border:1px solid #1f2937;border-radius:10px;padding:18px;font-size:0.78rem;color:#6b7280;line-height:1.9}
+.scorebox strong{color:#9ca3af}
+.footer{text-align:center;color:#1f2937;font-size:0.7rem;margin-top:36px;padding-top:16px;border-top:1px solid #111827}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span><span class="pill">&#128203; Test Cases: <a href="https://attractive-snake.pika.me/benchmark_agent_llm.html" target="_blank">attractive-snake.pika.me/benchmark_agent_llm.html</a></span> &nbsp; 1300 cases &middot; 13 categories &middot; 83 skills</span>
+  <span style="text-align:right;line-height:1.6"><span style="display:block">Updated: 2026-03-21 14:10 UTC (GT-fixed)</span><span style="display:block;font-size:0.65rem;color:#5a6270">* GLM-5-Turbo: bg50 context (50-msg window). Other models: bg100 (100-msg window).</span></span>
+</div>
+<div class="wrap">
+
+<div class="hdr">
+  <h1>PikaBot LLM Benchmark v5 &mdash; Results</h1>
+  <div class="sub">1300 English-only cases &nbsp;&middot;&nbsp; 13 categories &nbsp;&middot;&nbsp; 24 models &nbsp;&middot;&nbsp; BFCL-aligned &nbsp;&middot;&nbsp; March 2026 &nbsp;&middot;&nbsp; GT v3 &nbsp;&middot;&nbsp; GT-fixed &nbsp;&middot;&nbsp; Final Score (0.7&times;W-CatAvg+0.3&times;PEQ)</div>
+</div>
+
+<div class="cards">
+<div style="background:#10111c;border:1px solid #c084fc30;border-radius:10px;padding:16px 10px 10px;text-align:center;position:relative;overflow:visible">
+  <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);padding:2px 10px;border-radius:12px;font-size:0.65rem;font-weight:800;color:#0a0f1e;z-index:1;background:#c084fc">#1</div>
+  <div style="font-size:0.72rem;color:#bcc3cf;margin-bottom:6px;line-height:1.3">Claude Opus 4.6</div>
+  <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:4px;color:#c084fc">79.0%</div>
+  <div style="font-size:0.6rem;color:#5a6270;margin-bottom:6px">Final Score</div>
+  <div style="font-size:0.62rem;color:#6b7280;line-height:1.8">CatAvg <b style="color:#9ca3af">85.5%</b> (ref)&nbsp;&nbsp;W-CatAvg <b style="color:#9ca3af">81.6%</b>&nbsp;&nbsp;PEQ <b style="color:#9ca3af">73.0%</b>&nbsp;&nbsp;lat <b style="color:#9ca3af">3.48s</b></div>
+  <div style="margin-top:8px;font-size:0.68rem"><span style="color:#4ade80;background:#064e3b;border-radius:20px;padding:2px 10px;display:inline-block">&#10003; 0.08%</span></div>
+  
+</div>
+<div style="background:#10111c;border:1px solid #34d39930;border-radius:10px;padding:16px 10px 10px;text-align:center;position:relative;overflow:visible">
+  <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);padding:2px 10px;border-radius:12px;font-size:0.65rem;font-weight:800;color:#0a0f1e;z-index:1;background:#34d399">#2</div>
+  <div style="font-size:0.72rem;color:#bcc3cf;margin-bottom:6px;line-height:1.3">Gemini 3.1 Pro</div>
+  <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:4px;color:#34d399">78.3%</div>
+  <div style="font-size:0.6rem;color:#5a6270;margin-bottom:6px">Final Score</div>
+  <div style="font-size:0.62rem;color:#6b7280;line-height:1.8">CatAvg <b style="color:#9ca3af">84.7%</b> (ref)&nbsp;&nbsp;W-CatAvg <b style="color:#9ca3af">81.6%</b>&nbsp;&nbsp;PEQ <b style="color:#9ca3af">70.7%</b>&nbsp;&nbsp;lat <b style="color:#9ca3af">6.59s</b></div>
+  <div style="margin-top:8px;font-size:0.68rem"><span style="color:#4ade80;background:#064e3b;border-radius:20px;padding:2px 10px;display:inline-block">&#10003; 0.08%</span></div>
+  
+</div>
+<div style="background:#10111c;border:1px solid #818cf830;border-radius:10px;padding:16px 10px 10px;text-align:center;position:relative;overflow:visible">
+  <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);padding:2px 10px;border-radius:12px;font-size:0.65rem;font-weight:800;color:#0a0f1e;z-index:1;background:#818cf8">#3</div>
+  <div style="font-size:0.72rem;color:#bcc3cf;margin-bottom:6px;line-height:1.3">Claude Sonnet 4.6</div>
+  <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:4px;color:#818cf8">78.0%</div>
+  <div style="font-size:0.6rem;color:#5a6270;margin-bottom:6px">Final Score</div>
+  <div style="font-size:0.62rem;color:#6b7280;line-height:1.8">CatAvg <b style="color:#9ca3af">84.1%</b> (ref)&nbsp;&nbsp;W-CatAvg <b style="color:#9ca3af">79.8%</b>&nbsp;&nbsp;PEQ <b style="color:#9ca3af">73.9%</b>&nbsp;&nbsp;lat <b style="color:#9ca3af">3.05s</b></div>
+  <div style="margin-top:8px;font-size:0.68rem"><span style="color:#4ade80;background:#064e3b;border-radius:20px;padding:2px 10px;display:inline-block">&#10003; 0.00%</span></div>
+  
+</div>
+<div style="background:#10111c;border:1px solid #fb923c30;border-radius:10px;padding:16px 10px 10px;text-align:center;position:relative;overflow:visible">
+  <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);padding:2px 10px;border-radius:12px;font-size:0.65rem;font-weight:800;color:#0a0f1e;z-index:1;background:#fb923c">#4</div>
+  <div style="font-size:0.72rem;color:#bcc3cf;margin-bottom:6px;line-height:1.3">Qwen3.5-397B-A17B</div>
+  <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:4px;color:#fb923c">77.6%</div>
+  <div style="font-size:0.6rem;color:#5a6270;margin-bottom:6px">Final Score</div>
+  <div style="font-size:0.62rem;color:#6b7280;line-height:1.8">CatAvg <b style="color:#9ca3af">83.4%</b> (ref)&nbsp;&nbsp;W-CatAvg <b style="color:#9ca3af">80.0%</b>&nbsp;&nbsp;PEQ <b style="color:#9ca3af">72.1%</b>&nbsp;&nbsp;lat <b style="color:#9ca3af">6.19s</b></div>
+  <div style="margin-top:8px;font-size:0.68rem"><span style="color:#4ade80;background:#064e3b;border-radius:20px;padding:2px 10px;display:inline-block">&#10003; 0.23%</span></div>
+  
+</div>
+<div style="background:#10111c;border:1px solid #22d3ee30;border-radius:10px;padding:16px 10px 10px;text-align:center;position:relative;overflow:visible">
+  <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);padding:2px 10px;border-radius:12px;font-size:0.65rem;font-weight:800;color:#0a0f1e;z-index:1;background:#22d3ee">#5</div>
+  <div style="font-size:0.72rem;color:#bcc3cf;margin-bottom:6px;line-height:1.3">seed-2.0-lite</div>
+  <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:4px;color:#22d3ee">77.2%</div>
+  <div style="font-size:0.6rem;color:#5a6270;margin-bottom:6px">Final Score</div>
+  <div style="font-size:0.62rem;color:#6b7280;line-height:1.8">CatAvg <b style="color:#9ca3af">86.3%</b> (ref)&nbsp;&nbsp;W-CatAvg <b style="color:#9ca3af">83.5%</b>&nbsp;&nbsp;PEQ <b style="color:#9ca3af">62.4%</b>&nbsp;&nbsp;lat <b style="color:#9ca3af">6.04s</b></div>
+  <div style="margin-top:8px;font-size:0.68rem"><span style="color:#4ade80;background:#064e3b;border-radius:20px;padding:2px 10px;display:inline-block">&#10003; 0.00%</span></div>
+  
+</div>
+<div style="background:#10111c;border:1px solid #f9731630;border-radius:10px;padding:16px 10px 10px;text-align:center;position:relative;overflow:visible">
+  <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);padding:2px 10px;border-radius:12px;font-size:0.65rem;font-weight:800;color:#0a0f1e;z-index:1;background:#f97316">#6</div>
+  <div style="font-size:0.72rem;color:#bcc3cf;margin-bottom:6px;line-height:1.3">Qwen3-235B-A22B</div>
+  <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:4px;color:#f97316">76.9%</div>
+  <div style="font-size:0.6rem;color:#5a6270;margin-bottom:6px">Final Score</div>
+  <div style="font-size:0.62rem;color:#6b7280;line-height:1.8">CatAvg <b style="color:#9ca3af">83.5%</b> (ref)&nbsp;&nbsp;W-CatAvg <b style="color:#9ca3af">78.8%</b>&nbsp;&nbsp;PEQ <b style="color:#9ca3af">72.4%</b>&nbsp;&nbsp;lat <b style="color:#9ca3af">1.77s</b></div>
+  <div style="margin-top:8px;font-size:0.68rem"><span style="color:#4ade80;background:#064e3b;border-radius:20px;padding:2px 10px;display:inline-block">&#10003; 0.23%</span></div>
+  
+</div>
+<div style="background:#10111c;border:1px solid #38bdf830;border-radius:10px;padding:16px 10px 10px;text-align:center;position:relative;overflow:visible">
+  <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);padding:2px 10px;border-radius:12px;font-size:0.65rem;font-weight:800;color:#0a0f1e;z-index:1;background:#38bdf8">#7</div>
+  <div style="font-size:0.72rem;color:#bcc3cf;margin-bottom:6px;line-height:1.3">OpenAI o3</div>
+  <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:4px;color:#38bdf8">76.8%</div>
+  <div style="font-size:0.6rem;color:#5a6270;margin-bottom:6px">Final Score</div>
+  <div style="font-size:0.62rem;color:#6b7280;line-height:1.8">CatAvg <b style="color:#9ca3af">85.5%</b> (ref)&nbsp;&nbsp;W-CatAvg <b style="color:#9ca3af">82.0%</b>&nbsp;&nbsp;PEQ <b style="color:#9ca3af">64.8%</b>&nbsp;&nbsp;lat <b style="color:#9ca3af">2.72s</b></div>
+  <div style="margin-top:8px;font-size:0.68rem"><span style="color:#4ade80;background:#064e3b;border-radius:20px;padding:2px 10px;display:inline-block">&#10003; 0.00%</span></div>
+  
+</div>
+<div style="background:#10111c;border:1px solid #4ade8030;border-radius:10px;padding:16px 10px 10px;text-align:center;position:relative;overflow:visible">
+  <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);padding:2px 10px;border-radius:12px;font-size:0.65rem;font-weight:800;color:#0a0f1e;z-index:1;background:#4ade80">#8</div>
+  <div style="font-size:0.72rem;color:#bcc3cf;margin-bottom:6px;line-height:1.3">GPT-5.4</div>
+  <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:4px;color:#4ade80">76.5%</div>
+  <div style="font-size:0.6rem;color:#5a6270;margin-bottom:6px">Final Score</div>
+  <div style="font-size:0.62rem;color:#6b7280;line-height:1.8">CatAvg <b style="color:#9ca3af">82.4%</b> (ref)&nbsp;&nbsp;W-CatAvg <b style="color:#9ca3af">77.5%</b>&nbsp;&nbsp;PEQ <b style="color:#9ca3af">74.0%</b>&nbsp;&nbsp;lat <b style="color:#9ca3af">1.53s</b></div>
+  <div style="margin-top:8px;font-size:0.68rem"><span style="color:#4ade80;background:#064e3b;border-radius:20px;padding:2px 10px;display:inline-block">&#10003; 0.00%</span></div>
+  
+</div>
+<div style="background:#10111c;border:1px solid #a78bfa30;border-radius:10px;padding:16px 10px 10px;text-align:center;position:relative;overflow:visible">
+  <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);padding:2px 10px;border-radius:12px;font-size:0.65rem;font-weight:800;color:#0a0f1e;z-index:1;background:#a78bfa">#9</div>
+  <div style="font-size:0.72rem;color:#bcc3cf;margin-bottom:6px;line-height:1.3">Grok 4 (0709)</div>
+  <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:4px;color:#a78bfa">76.4%</div>
+  <div style="font-size:0.6rem;color:#5a6270;margin-bottom:6px">Final Score</div>
+  <div style="font-size:0.62rem;color:#6b7280;line-height:1.8">CatAvg <b style="color:#9ca3af">81.5%</b> (ref)&nbsp;&nbsp;W-CatAvg <b style="color:#9ca3af">78.5%</b>&nbsp;&nbsp;PEQ <b style="color:#9ca3af">71.7%</b>&nbsp;&nbsp;lat <b style="color:#9ca3af">11.44s</b></div>
+  <div style="margin-top:8px;font-size:0.68rem"><span style="color:#4ade80;background:#064e3b;border-radius:20px;padding:2px 10px;display:inline-block">&#10003; 0.00%</span></div>
+  
+</div>
+<div style="background:#10111c;border:1px solid #f472b630;border-radius:10px;padding:16px 10px 10px;text-align:center;position:relative;overflow:visible">
+  <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);padding:2px 10px;border-radius:12px;font-size:0.65rem;font-weight:800;color:#0a0f1e;z-index:1;background:#f472b6">#10</div>
+  <div style="font-size:0.72rem;color:#bcc3cf;margin-bottom:6px;line-height:1.3">ByteDance Seed 1.8</div>
+  <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:4px;color:#f472b6">76.2%</div>
+  <div style="font-size:0.6rem;color:#5a6270;margin-bottom:6px">Final Score</div>
+  <div style="font-size:0.62rem;color:#6b7280;line-height:1.8">CatAvg <b style="color:#9ca3af">82.5%</b> (ref)&nbsp;&nbsp;W-CatAvg <b style="color:#9ca3af">79.4%</b>&nbsp;&nbsp;PEQ <b style="color:#9ca3af">68.7%</b>&nbsp;&nbsp;lat <b style="color:#9ca3af">7.35s</b></div>
+  <div style="margin-top:8px;font-size:0.68rem"><span style="color:#4ade80;background:#064e3b;border-radius:20px;padding:2px 10px;display:inline-block">&#10003; 0.15%</span></div>
+  
+</div>
+<div style="background:#10111c;border:1px solid #fb718530;border-radius:10px;padding:16px 10px 10px;text-align:center;position:relative;overflow:visible">
+  <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);padding:2px 10px;border-radius:12px;font-size:0.65rem;font-weight:800;color:#0a0f1e;z-index:1;background:#fb7185">#11</div>
+  <div style="font-size:0.72rem;color:#bcc3cf;margin-bottom:6px;line-height:1.3">Kimi K2.5</div>
+  <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:4px;color:#fb7185">76.1%</div>
+  <div style="font-size:0.6rem;color:#5a6270;margin-bottom:6px">Final Score</div>
+  <div style="font-size:0.62rem;color:#6b7280;line-height:1.8">CatAvg <b style="color:#9ca3af">82.7%</b> (ref)&nbsp;&nbsp;W-CatAvg <b style="color:#9ca3af">78.0%</b>&nbsp;&nbsp;PEQ <b style="color:#9ca3af">71.7%</b>&nbsp;&nbsp;lat <b style="color:#9ca3af">0.74s</b></div>
+  <div style="margin-top:8px;font-size:0.68rem"><span style="color:#4ade80;background:#064e3b;border-radius:20px;padding:2px 10px;display:inline-block">&#10003; 0.00%</span></div>
+  
+</div>
+<div style="background:#10111c;border:1px solid #60a5fa30;border-radius:10px;padding:16px 10px 10px;text-align:center;position:relative;overflow:visible">
+  <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);padding:2px 10px;border-radius:12px;font-size:0.65rem;font-weight:800;color:#0a0f1e;z-index:1;background:#60a5fa">#12</div>
+  <div style="font-size:0.72rem;color:#bcc3cf;margin-bottom:6px;line-height:1.3">OpenAI o4-mini</div>
+  <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:4px;color:#60a5fa">76.1%</div>
+  <div style="font-size:0.6rem;color:#5a6270;margin-bottom:6px">Final Score</div>
+  <div style="font-size:0.62rem;color:#6b7280;line-height:1.8">CatAvg <b style="color:#9ca3af">83.4%</b> (ref)&nbsp;&nbsp;W-CatAvg <b style="color:#9ca3af">79.5%</b>&nbsp;&nbsp;PEQ <b style="color:#9ca3af">68.0%</b>&nbsp;&nbsp;lat <b style="color:#9ca3af">3.80s</b></div>
+  <div style="margin-top:8px;font-size:0.68rem"><span style="color:#4ade80;background:#064e3b;border-radius:20px;padding:2px 10px;display:inline-block">&#10003; 0.00%</span></div>
+  
+</div>
+<div style="background:#10111c;border:1px solid #e879f930;border-radius:10px;padding:16px 10px 10px;text-align:center;position:relative;overflow:visible">
+  <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);padding:2px 10px;border-radius:12px;font-size:0.65rem;font-weight:800;color:#0a0f1e;z-index:1;background:#e879f9">#13</div>
+  <div style="font-size:0.72rem;color:#bcc3cf;margin-bottom:6px;line-height:1.3">Grok 4.1 Fast</div>
+  <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:4px;color:#e879f9">75.7%</div>
+  <div style="font-size:0.6rem;color:#5a6270;margin-bottom:6px">Final Score</div>
+  <div style="font-size:0.62rem;color:#6b7280;line-height:1.8">CatAvg <b style="color:#9ca3af">83.4%</b> (ref)&nbsp;&nbsp;W-CatAvg <b style="color:#9ca3af">78.4%</b>&nbsp;&nbsp;PEQ <b style="color:#9ca3af">69.5%</b>&nbsp;&nbsp;lat <b style="color:#9ca3af">0.78s</b></div>
+  <div style="margin-top:8px;font-size:0.68rem"><span style="color:#4ade80;background:#064e3b;border-radius:20px;padding:2px 10px;display:inline-block">&#10003; 0.15%</span></div>
+  
+</div>
+<div style="background:#10111c;border:1px solid #86efac30;border-radius:10px;padding:16px 10px 10px;text-align:center;position:relative;overflow:visible">
+  <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);padding:2px 10px;border-radius:12px;font-size:0.65rem;font-weight:800;color:#0a0f1e;z-index:1;background:#86efac">#14</div>
+  <div style="font-size:0.72rem;color:#bcc3cf;margin-bottom:6px;line-height:1.3">Gemini 3.1 Flash Lite</div>
+  <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:4px;color:#86efac">75.1%</div>
+  <div style="font-size:0.6rem;color:#5a6270;margin-bottom:6px">Final Score</div>
+  <div style="font-size:0.62rem;color:#6b7280;line-height:1.8">CatAvg <b style="color:#9ca3af">82.4%</b> (ref)&nbsp;&nbsp;W-CatAvg <b style="color:#9ca3af">78.0%</b>&nbsp;&nbsp;PEQ <b style="color:#9ca3af">68.6%</b>&nbsp;&nbsp;lat <b style="color:#9ca3af">1.05s</b></div>
+  <div style="margin-top:8px;font-size:0.68rem"><span style="color:#4ade80;background:#064e3b;border-radius:20px;padding:2px 10px;display:inline-block">&#10003; 0.08%</span></div>
+  
+</div>
+<div style="background:#10111c;border:1px solid #f8717130;border-radius:10px;padding:16px 10px 10px;text-align:center;position:relative;overflow:visible">
+  <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);padding:2px 10px;border-radius:12px;font-size:0.65rem;font-weight:800;color:#0a0f1e;z-index:1;background:#f87171">#15</div>
+  <div style="font-size:0.72rem;color:#bcc3cf;margin-bottom:6px;line-height:1.3">Llama 4 Maverick</div>
+  <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:4px;color:#f87171">73.8%</div>
+  <div style="font-size:0.6rem;color:#5a6270;margin-bottom:6px">Final Score</div>
+  <div style="font-size:0.62rem;color:#6b7280;line-height:1.8">CatAvg <b style="color:#9ca3af">82.2%</b> (ref)&nbsp;&nbsp;W-CatAvg <b style="color:#9ca3af">76.8%</b>&nbsp;&nbsp;PEQ <b style="color:#9ca3af">66.9%</b>&nbsp;&nbsp;lat <b style="color:#9ca3af">1.23s</b></div>
+  <div style="margin-top:8px;font-size:0.68rem"><span style="color:#f87171;background:#450a0a;border-radius:20px;padding:2px 10px;display:inline-block">&#10007; 1.38%</span> <span style="background:#450a0a;color:#fca5a5;padding:1px 6px;border-radius:4px;font-size:0.6rem;font-weight:700">&#9679; Deploy Blocked</span></div>
+  
+</div>
+<div style="background:#10111c;border:1px solid #94a3b830;border-radius:10px;padding:16px 10px 10px;text-align:center;position:relative;overflow:visible">
+  <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);padding:2px 10px;border-radius:12px;font-size:0.65rem;font-weight:800;color:#0a0f1e;z-index:1;background:#94a3b8">#16</div>
+  <div style="font-size:0.72rem;color:#bcc3cf;margin-bottom:6px;line-height:1.3">DeepSeek V3-2</div>
+  <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:4px;color:#94a3b8">72.9%</div>
+  <div style="font-size:0.6rem;color:#5a6270;margin-bottom:6px">Final Score</div>
+  <div style="font-size:0.62rem;color:#6b7280;line-height:1.8">CatAvg <b style="color:#9ca3af">80.3%</b> (ref)&nbsp;&nbsp;W-CatAvg <b style="color:#9ca3af">74.5%</b>&nbsp;&nbsp;PEQ <b style="color:#9ca3af">69.0%</b>&nbsp;&nbsp;lat <b style="color:#9ca3af">3.78s</b></div>
+  <div style="margin-top:8px;font-size:0.68rem"><span style="color:#4ade80;background:#064e3b;border-radius:20px;padding:2px 10px;display:inline-block">&#10003; 0.00%</span></div>
+  
+</div>
+<div style="background:#10111c;border:1px solid #fbbf2430;border-radius:10px;padding:16px 10px 10px;text-align:center;position:relative;overflow:visible">
+  <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);padding:2px 10px;border-radius:12px;font-size:0.65rem;font-weight:800;color:#0a0f1e;z-index:1;background:#fbbf24">#17</div>
+  <div style="font-size:0.72rem;color:#bcc3cf;margin-bottom:6px;line-height:1.3">Kimi K2</div>
+  <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:4px;color:#fbbf24">72.1%</div>
+  <div style="font-size:0.6rem;color:#5a6270;margin-bottom:6px">Final Score</div>
+  <div style="font-size:0.62rem;color:#6b7280;line-height:1.8">CatAvg <b style="color:#9ca3af">77.2%</b> (ref)&nbsp;&nbsp;W-CatAvg <b style="color:#9ca3af">73.3%</b>&nbsp;&nbsp;PEQ <b style="color:#9ca3af">69.1%</b>&nbsp;&nbsp;lat <b style="color:#9ca3af">8.89s</b></div>
+  <div style="margin-top:8px;font-size:0.68rem"><span style="color:#4ade80;background:#064e3b;border-radius:20px;padding:2px 10px;display:inline-block">&#10003; 0.23%</span></div>
+  
+</div>
+<div style="background:#10111c;border:1px solid #e2e8f030;border-radius:10px;padding:16px 10px 10px;text-align:center;position:relative;overflow:visible">
+  <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);padding:2px 10px;border-radius:12px;font-size:0.65rem;font-weight:800;color:#0a0f1e;z-index:1;background:#e2e8f0">#18</div>
+  <div style="font-size:0.72rem;color:#bcc3cf;margin-bottom:6px;line-height:1.3">MiniMax M2.5</div>
+  <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:4px;color:#e2e8f0">72.0%</div>
+  <div style="font-size:0.6rem;color:#5a6270;margin-bottom:6px">Final Score</div>
+  <div style="font-size:0.62rem;color:#6b7280;line-height:1.8">CatAvg <b style="color:#9ca3af">78.8%</b> (ref)&nbsp;&nbsp;W-CatAvg <b style="color:#9ca3af">74.9%</b>&nbsp;&nbsp;PEQ <b style="color:#9ca3af">65.4%</b>&nbsp;&nbsp;lat <b style="color:#9ca3af">9.22s</b>&nbsp;&nbsp;parse_err <b>9</b></div>
+  <div style="margin-top:8px;font-size:0.68rem"><span style="color:#4ade80;background:#064e3b;border-radius:20px;padding:2px 10px;display:inline-block">&#10003; 0.08%</span></div>
+  
+</div>
+<div style="background:#10111c;border:1px solid #cbd5e130;border-radius:10px;padding:16px 10px 10px;text-align:center;position:relative;overflow:visible">
+  <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);padding:2px 10px;border-radius:12px;font-size:0.65rem;font-weight:800;color:#0a0f1e;z-index:1;background:#cbd5e1">#19</div>
+  <div style="font-size:0.72rem;color:#bcc3cf;margin-bottom:6px;line-height:1.3">MiniMax M2.7</div>
+  <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:4px;color:#cbd5e1">71.3%</div>
+  <div style="font-size:0.6rem;color:#5a6270;margin-bottom:6px">Final Score</div>
+  <div style="font-size:0.62rem;color:#6b7280;line-height:1.8">CatAvg <b style="color:#9ca3af">80.2%</b> (ref)&nbsp;&nbsp;W-CatAvg <b style="color:#9ca3af">75.3%</b>&nbsp;&nbsp;PEQ <b style="color:#9ca3af">62.2%</b>&nbsp;&nbsp;lat <b style="color:#9ca3af">4.51s</b></div>
+  <div style="margin-top:8px;font-size:0.68rem"><span style="color:#4ade80;background:#064e3b;border-radius:20px;padding:2px 10px;display:inline-block">&#10003; 0.15%</span></div>
+  
+</div>
+<div style="background:#10111c;border:1px solid #a5b4fc30;border-radius:10px;padding:16px 10px 10px;text-align:center;position:relative;overflow:visible">
+  <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);padding:2px 10px;border-radius:12px;font-size:0.65rem;font-weight:800;color:#0a0f1e;z-index:1;background:#a5b4fc">#20</div>
+  <div style="font-size:0.72rem;color:#bcc3cf;margin-bottom:6px;line-height:1.3">MiMo V2 Pro</div>
+  <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:4px;color:#a5b4fc">70.3%</div>
+  <div style="font-size:0.6rem;color:#5a6270;margin-bottom:6px">Final Score</div>
+  <div style="font-size:0.62rem;color:#6b7280;line-height:1.8">CatAvg <b style="color:#9ca3af">76.6%</b> (ref)&nbsp;&nbsp;W-CatAvg <b style="color:#9ca3af">69.7%</b>&nbsp;&nbsp;PEQ <b style="color:#9ca3af">71.6%</b>&nbsp;&nbsp;lat <b style="color:#9ca3af">3.69s</b></div>
+  <div style="margin-top:8px;font-size:0.68rem"><span style="color:#4ade80;background:#064e3b;border-radius:20px;padding:2px 10px;display:inline-block">&#10003; 0.31%</span></div>
+  
+</div>
+<div style="background:#10111c;border:1px solid #64748b30;border-radius:10px;padding:16px 10px 10px;text-align:center;position:relative;overflow:visible">
+  <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);padding:2px 10px;border-radius:12px;font-size:0.65rem;font-weight:800;color:#0a0f1e;z-index:1;background:#64748b">#21</div>
+  <div style="font-size:0.72rem;color:#bcc3cf;margin-bottom:6px;line-height:1.3">GLM-5</div>
+  <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:4px;color:#64748b">70.2%</div>
+  <div style="font-size:0.6rem;color:#5a6270;margin-bottom:6px">Final Score</div>
+  <div style="font-size:0.62rem;color:#6b7280;line-height:1.8">CatAvg <b style="color:#9ca3af">76.0%</b> (ref)&nbsp;&nbsp;W-CatAvg <b style="color:#9ca3af">69.9%</b>&nbsp;&nbsp;PEQ <b style="color:#9ca3af">71.1%</b>&nbsp;&nbsp;lat <b style="color:#9ca3af">0.69s</b></div>
+  <div style="margin-top:8px;font-size:0.68rem"><span style="color:#4ade80;background:#064e3b;border-radius:20px;padding:2px 10px;display:inline-block">&#10003; 0.31%</span></div>
+  
+</div>
+<div style="background:#10111c;border:1px solid #f59e0b30;border-radius:10px;padding:16px 10px 10px;text-align:center;position:relative;overflow:visible">
+  <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);padding:2px 10px;border-radius:12px;font-size:0.65rem;font-weight:800;color:#0a0f1e;z-index:1;background:#f59e0b">#22</div>
+  <div style="font-size:0.72rem;color:#bcc3cf;margin-bottom:6px;line-height:1.3">GLM-5-Turbo</div>
+  <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:4px;color:#f59e0b">65.8%</div>
+  <div style="font-size:0.6rem;color:#5a6270;margin-bottom:6px">Final Score</div>
+  <div style="font-size:0.62rem;color:#6b7280;line-height:1.8">CatAvg <b style="color:#9ca3af">67.7%</b> (ref)&nbsp;&nbsp;W-CatAvg <b style="color:#9ca3af">63.3%</b>&nbsp;&nbsp;PEQ <b style="color:#9ca3af">71.8%</b>&nbsp;&nbsp;lat <b style="color:#9ca3af">7.17s</b></div>
+  <div style="margin-top:8px;font-size:0.68rem"><span style="color:#4ade80;background:#064e3b;border-radius:20px;padding:2px 10px;display:inline-block">&#10003; 0.38%</span></div>
+  <div style="margin-top:7px;font-size:0.6rem;color:#fbbf24;background:rgba(251,191,36,0.08);padding:4px 6px;border-radius:4px;border-left:2px solid #fbbf24;text-align:left">&#9650; bg50 context window (others: bg100) &mdash; multi-turn scores not directly comparable</div>
+</div>
+<div style="background:#10111c;border:1px solid #fcd34d30;border-radius:10px;padding:16px 10px 10px;text-align:center;position:relative;overflow:visible">
+  <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);padding:2px 10px;border-radius:12px;font-size:0.65rem;font-weight:800;color:#0a0f1e;z-index:1;background:#fcd34d">#23</div>
+  <div style="font-size:0.72rem;color:#bcc3cf;margin-bottom:6px;line-height:1.3">Gemini Flash 3</div>
+  <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:4px;color:#fcd34d">61.3%</div>
+  <div style="font-size:0.6rem;color:#5a6270;margin-bottom:6px">Final Score</div>
+  <div style="font-size:0.62rem;color:#6b7280;line-height:1.8">CatAvg <b style="color:#9ca3af">63.8%</b> (ref)&nbsp;&nbsp;W-CatAvg <b style="color:#9ca3af">57.4%</b>&nbsp;&nbsp;PEQ <b style="color:#9ca3af">70.5%</b>&nbsp;&nbsp;lat <b style="color:#9ca3af">3.84s</b></div>
+  <div style="margin-top:8px;font-size:0.68rem"><span style="color:#4ade80;background:#064e3b;border-radius:20px;padding:2px 10px;display:inline-block">&#10003; 0.69%</span></div>
+  
+</div>
+<div style="background:#10111c;border:1px solid #94a3b830;border-radius:10px;padding:16px 10px 10px;text-align:center;position:relative;overflow:visible">
+  <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);padding:2px 10px;border-radius:12px;font-size:0.65rem;font-weight:800;color:#0a0f1e;z-index:1;background:#94a3b8">#24</div>
+  <div style="font-size:0.72rem;color:#bcc3cf;margin-bottom:6px;line-height:1.3">gpt-oss-120B</div>
+  <div style="font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:4px;color:#94a3b8">59.6%</div>
+  <div style="font-size:0.6rem;color:#5a6270;margin-bottom:6px">Final Score</div>
+  <div style="font-size:0.62rem;color:#6b7280;line-height:1.8">CatAvg <b style="color:#9ca3af">62.2%</b> (ref)&nbsp;&nbsp;W-CatAvg <b style="color:#9ca3af">55.1%</b>&nbsp;&nbsp;PEQ <b style="color:#9ca3af">69.9%</b>&nbsp;&nbsp;lat <b style="color:#9ca3af">2.39s</b>&nbsp;&nbsp;parse_err <b>17</b></div>
+  <div style="margin-top:8px;font-size:0.68rem"><span style="color:#4ade80;background:#064e3b;border-radius:20px;padding:2px 10px;display:inline-block">&#10003; 0.31%</span></div>
+  
+</div>
+</div>
+
+<div class="mdsec">
+  <div class="mdbox">
+    <div class="md-title" style="color:#c084fc">Multi-Dimensional</div>
+    <div class="md-sub">Difficulty-Weighted Top 5 Categories</div>
+    <div class="rlegend" id="rleg"></div>
+    <canvas id="radar" style="width:100%;height:420px;margin-top:-100px"></canvas>
+  </div>
+  <div>
+    <div class="cat-hdr"><div class="cat-title" style="color:#c084fc">Category Accuracy %</div></div>
+    <div class="tscroll">
+      <table class="ctab">
+        <thead><tr id="cthead"></tr></thead>
+        <tbody id="ctbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div style="font-size:0.95rem;font-weight:700;color:#c084fc;margin-bottom:8px">Key Findings</div>
+<div class="falert">&#9650; Statistical note: Models within &lt;3pp of each other (roughly Top 5) are not statistically significant (95% CI &asymp; &plusmn;2.3pp). When rankings are close, consider latency and cost holistically rather than relying solely on Final Score.</div>
+<div class="fgrid">
+  <div class="fcard fy">
+    <div class="ftag">💎 BEST VALUE CHAMPION</div>
+    <div class="ftitle y">Best Value: Qwen3.5-397B</div>
+    <div class="fbody">At just $0.39/1M tokens, Qwen3.5-397B ranks #4 overall (77.6%) &mdash; only 1.4pp behind Claude Opus at 13&times; lower cost. The strongest cost-performance ratio in the benchmark.</div>
+  </div>
+  <div class="fcard fc">
+    <div class="ftag">⚡ SPEED + COST SWEET SPOT</div>
+    <div class="ftitle c">Fastest Top Performer: Kimi K2.5</div>
+    <div class="fbody">Kimi K2.5 combines the lowest latency in the top tier (0.74s avg) with strong accuracy (76.1%) at $0.60/1M. The go-to choice for latency-sensitive real-time applications.</div>
+  </div>
+  <div class="fcard fo">
+    <div class="ftag">🏆 BUDGET TIER</div>
+    <div class="ftitle o">Cheapest High Performers: $0.20/1M Tier</div>
+    <div class="fbody">Both Qwen3-235B (76.9%) and Grok 4.1 Fast (75.7%) deliver near-premium accuracy at only $0.20/1M &mdash; 25&times; cheaper than Claude Opus. Ideal for high-volume deployments.</div>
+  </div>
+  <div class="fcard fy">
+    <div class="ftag">⚠️ MINIMAX GAP</div>
+    <div class="ftitle y">MiniMax Underperforms Expectations</div>
+    <div class="fbody">MiniMax M2.7 (71.3%) and M2.5 (72.0%) rank 18th&ndash;19th, trailing top models by ~7pp. Upgrading to Qwen3.5-397B or Kimi K2.5 offers significant quality improvement at similar cost.</div>
+  </div>
+  <div class="fcard fr">
+    <div class="ftag">🔴 LOCAL MODELS NOT READY</div>
+    <div class="ftitle r">Open-Weight Models Not Production-Ready</div>
+    <div class="fbody">gpt-oss-120B scores only 59.6% &mdash; a 19pp gap behind the top tier. For agent skill routing specifically, open-weight models currently cannot match cloud APIs in routing accuracy.</div>
+  </div>
+  <div class="fcard fg">
+    <div class="ftag">✅ HALLUCINATION SAFETY</div>
+    <div class="ftitle g">Top Models Are Hallucination-Safe</div>
+    <div class="fbody">All top-10 models achieve hallucination rates below 0.25%, well within the 1% deployment threshold. Llama 4 Maverick is the only model blocked (1.38%). Claude, Gemini, and Qwen all show zero or near-zero hallucination.</div>
+  </div>
+</div>
+
+<div style="font-size:0.95rem;font-weight:700;color:#c084fc;margin-bottom:8px">Cost &amp; Latency</div>
+<div style="font-size:0.75rem;color:#7c8898;margin-bottom:14px;display:flex;align-items:flex-start;gap:8px"><span style="font-size:0.85rem;line-height:1">⚠️</span><span style="padding-top:3px">Latency is measured end-to-end and varies by provider/infrastructure, not just model speed. Direct comparisons across providers may not reflect raw model performance.</span></div>
+<div class="lgrid">
+<div style="background:#10111c;border:1px solid #1f2937;border-radius:8px;padding:10px 12px">
+  <div style="font-size:0.67rem;color:#7c8898;margin-bottom:3px">seed-2.0-lite</div>
+  <div style="font-size:1.1rem;font-weight:700;line-height:1;color:#22d3ee">6.04s</div>
+  <div style="font-size:0.68rem;color:#7c8898;margin:2px 0">$0.25/1M input</div>
+  <div style="font-size:0.62rem;color:#374151">med 4.82s &middot; p90 10.46s</div>
+</div>
+<div style="background:#10111c;border:1px solid #1f2937;border-radius:8px;padding:10px 12px">
+  <div style="font-size:0.67rem;color:#7c8898;margin-bottom:3px">Claude Opus 4.6</div>
+  <div style="font-size:1.1rem;font-weight:700;line-height:1;color:#c084fc">3.48s</div>
+  <div style="font-size:0.68rem;color:#7c8898;margin:2px 0">$5.00/1M input</div>
+  <div style="font-size:0.62rem;color:#374151">med 3.25s &middot; p90 4.46s</div>
+</div>
+<div style="background:#10111c;border:1px solid #1f2937;border-radius:8px;padding:10px 12px">
+  <div style="font-size:0.67rem;color:#7c8898;margin-bottom:3px">Claude Sonnet 4.6</div>
+  <div style="font-size:1.1rem;font-weight:700;line-height:1;color:#818cf8">3.05s</div>
+  <div style="font-size:0.68rem;color:#7c8898;margin:2px 0">$3.00/1M input</div>
+  <div style="font-size:0.62rem;color:#374151">med 2.60s &middot; p90 3.99s</div>
+</div>
+<div style="background:#10111c;border:1px solid #1f2937;border-radius:8px;padding:10px 12px">
+  <div style="font-size:0.67rem;color:#7c8898;margin-bottom:3px">GPT-5.4</div>
+  <div style="font-size:1.1rem;font-weight:700;line-height:1;color:#4ade80">1.53s</div>
+  <div style="font-size:0.68rem;color:#7c8898;margin:2px 0">$2.50/1M input</div>
+  <div style="font-size:0.62rem;color:#374151">med 1.23s &middot; p90 2.26s</div>
+</div>
+<div style="background:#10111c;border:1px solid #1f2937;border-radius:8px;padding:10px 12px">
+  <div style="font-size:0.67rem;color:#7c8898;margin-bottom:3px">Qwen3.5-397B-A17B</div>
+  <div style="font-size:1.1rem;font-weight:700;line-height:1;color:#fb923c">6.19s</div>
+  <div style="font-size:0.68rem;color:#7c8898;margin:2px 0">$0.39/1M input</div>
+  <div style="font-size:0.62rem;color:#374151">med 3.97s &middot; p90 9.41s &middot; hall 0.23%</div>
+</div>
+<div style="background:#10111c;border:1px solid #1f2937;border-radius:8px;padding:10px 12px">
+  <div style="font-size:0.67rem;color:#7c8898;margin-bottom:3px">Qwen3-235B-A22B</div>
+  <div style="font-size:1.1rem;font-weight:700;line-height:1;color:#f97316">1.77s</div>
+  <div style="font-size:0.68rem;color:#7c8898;margin:2px 0">$0.20/1M input</div>
+  <div style="font-size:0.62rem;color:#374151">med 1.47s &middot; p90 3.19s &middot; hall 0.23%</div>
+</div>
+<div style="background:#10111c;border:1px solid #1f2937;border-radius:8px;padding:10px 12px">
+  <div style="font-size:0.67rem;color:#7c8898;margin-bottom:3px">MiniMax M2.7</div>
+  <div style="font-size:1.1rem;font-weight:700;line-height:1;color:#cbd5e1">4.51s</div>
+  <div style="font-size:0.68rem;color:#7c8898;margin:2px 0">$0.30/1M input</div>
+  <div style="font-size:0.62rem;color:#374151">med 3.41s &middot; p90 8.14s &middot; hall 0.15%</div>
+</div>
+<div style="background:#10111c;border:1px solid #1f2937;border-radius:8px;padding:10px 12px">
+  <div style="font-size:0.67rem;color:#7c8898;margin-bottom:3px">Kimi K2.5</div>
+  <div style="font-size:1.1rem;font-weight:700;line-height:1;color:#fb7185">0.74s</div>
+  <div style="font-size:0.68rem;color:#7c8898;margin:2px 0">$0.60/1M input</div>
+  <div style="font-size:0.62rem;color:#374151">med 0.65s &middot; p90 1.04s</div>
+</div>
+<div style="background:#10111c;border:1px solid #1f2937;border-radius:8px;padding:10px 12px">
+  <div style="font-size:0.67rem;color:#7c8898;margin-bottom:3px">OpenAI o3</div>
+  <div style="font-size:1.1rem;font-weight:700;line-height:1;color:#38bdf8">2.72s</div>
+  <div style="font-size:0.68rem;color:#7c8898;margin:2px 0">$2.00/1M input</div>
+  <div style="font-size:0.62rem;color:#374151">med 2.36s &middot; p90 4.48s</div>
+</div>
+<div style="background:#10111c;border:1px solid #1f2937;border-radius:8px;padding:10px 12px">
+  <div style="font-size:0.67rem;color:#7c8898;margin-bottom:3px">Gemini 3.1 Pro</div>
+  <div style="font-size:1.1rem;font-weight:700;line-height:1;color:#34d399">6.59s</div>
+  <div style="font-size:0.68rem;color:#7c8898;margin:2px 0">$2.00/1M input</div>
+  <div style="font-size:0.62rem;color:#374151">med 6.46s &middot; p90 7.99s</div>
+</div>
+<div style="background:#10111c;border:1px solid #1f2937;border-radius:8px;padding:10px 12px">
+  <div style="font-size:0.67rem;color:#7c8898;margin-bottom:3px">Grok 4.1 Fast</div>
+  <div style="font-size:1.1rem;font-weight:700;line-height:1;color:#e879f9">0.78s</div>
+  <div style="font-size:0.68rem;color:#7c8898;margin:2px 0">$0.20/1M input</div>
+  <div style="font-size:0.62rem;color:#374151">med 0.60s &middot; p90 1.15s &middot; hall 0.15%</div>
+</div>
+<div style="background:#10111c;border:1px solid #1f2937;border-radius:8px;padding:10px 12px">
+  <div style="font-size:0.67rem;color:#7c8898;margin-bottom:3px">Llama 4 Maverick ⚠️</div>
+  <div style="font-size:1.1rem;font-weight:700;line-height:1;color:#f87171">1.23s</div>
+  <div style="font-size:0.68rem;color:#7c8898;margin:2px 0">$0.27/1M input</div>
+  <div style="font-size:0.62rem;color:#374151">med 0.72s &middot; p90 2.04s &middot; hall 1.38%</div>
+</div>
+<div style="background:#10111c;border:1px solid #1f2937;border-radius:8px;padding:10px 12px">
+  <div style="font-size:0.67rem;color:#7c8898;margin-bottom:3px">OpenAI o4-mini</div>
+  <div style="font-size:1.1rem;font-weight:700;line-height:1;color:#60a5fa">3.80s</div>
+  <div style="font-size:0.68rem;color:#7c8898;margin:2px 0">$1.10/1M input</div>
+  <div style="font-size:0.62rem;color:#374151">med 3.42s &middot; p90 6.24s</div>
+</div>
+<div style="background:#10111c;border:1px solid #1f2937;border-radius:8px;padding:10px 12px">
+  <div style="font-size:0.67rem;color:#7c8898;margin-bottom:3px">Gemini 3.1 Flash Lite</div>
+  <div style="font-size:1.1rem;font-weight:700;line-height:1;color:#86efac">1.05s</div>
+  <div style="font-size:0.68rem;color:#7c8898;margin:2px 0">$0.25/1M input</div>
+  <div style="font-size:0.62rem;color:#374151">med 1.00s &middot; p90 1.25s</div>
+</div>
+<div style="background:#10111c;border:1px solid #1f2937;border-radius:8px;padding:10px 12px">
+  <div style="font-size:0.67rem;color:#7c8898;margin-bottom:3px">MiniMax M2.5</div>
+  <div style="font-size:1.1rem;font-weight:700;line-height:1;color:#e2e8f0">9.22s</div>
+  <div style="font-size:0.68rem;color:#7c8898;margin:2px 0">$0.30/1M input</div>
+  <div style="font-size:0.62rem;color:#374151">med 4.74s&nbsp;&nbsp;parse_err 9</div>
+</div>
+<div style="background:#10111c;border:1px solid #1f2937;border-radius:8px;padding:10px 12px">
+  <div style="font-size:0.67rem;color:#7c8898;margin-bottom:3px">GLM-5-Turbo</div>
+  <div style="font-size:1.1rem;font-weight:700;line-height:1;color:#f59e0b">7.17s</div>
+  <div style="font-size:0.68rem;color:#7c8898;margin:2px 0">$1.20/1M input</div>
+  <div style="font-size:0.62rem;color:#374151">med 3.77s &middot; p90 16.36s &middot; hall 0.38%</div>
+</div>
+<div style="background:#10111c;border:1px solid #1f2937;border-radius:8px;padding:10px 12px">
+  <div style="font-size:0.67rem;color:#7c8898;margin-bottom:3px">ByteDance Seed 1.8</div>
+  <div style="font-size:1.1rem;font-weight:700;line-height:1;color:#f472b6">7.35s</div>
+  <div style="font-size:0.68rem;color:#7c8898;margin:2px 0">$0.25/1M input</div>
+  <div style="font-size:0.62rem;color:#374151">med 5.57s &middot; p90 12.94s &middot; hall 0.15%</div>
+</div>
+<div style="background:#10111c;border:1px solid #1f2937;border-radius:8px;padding:10px 12px">
+  <div style="font-size:0.67rem;color:#7c8898;margin-bottom:3px">MiMo V2 Pro</div>
+  <div style="font-size:1.1rem;font-weight:700;line-height:1;color:#a5b4fc">3.69s</div>
+  <div style="font-size:0.68rem;color:#7c8898;margin:2px 0">$1.00/1M input</div>
+  <div style="font-size:0.62rem;color:#374151">med 2.82s &middot; p90 4.22s &middot; hall 0.31%</div>
+</div>
+<div style="background:#10111c;border:1px solid #1f2937;border-radius:8px;padding:10px 12px">
+  <div style="font-size:0.67rem;color:#7c8898;margin-bottom:3px">Kimi K2</div>
+  <div style="font-size:1.1rem;font-weight:700;line-height:1;color:#fbbf24">8.89s</div>
+  <div style="font-size:0.68rem;color:#7c8898;margin:2px 0">$0.60/1M input</div>
+  <div style="font-size:0.62rem;color:#374151">med 6.71s &middot; p90 14.36s &middot; hall 0.23%</div>
+</div>
+<div style="background:#10111c;border:1px solid #1f2937;border-radius:8px;padding:10px 12px">
+  <div style="font-size:0.67rem;color:#7c8898;margin-bottom:3px">GLM-5</div>
+  <div style="font-size:1.1rem;font-weight:700;line-height:1;color:#64748b">0.69s</div>
+  <div style="font-size:0.68rem;color:#7c8898;margin:2px 0">$1.00/1M input</div>
+  <div style="font-size:0.62rem;color:#374151">med 0.58s &middot; p90 0.95s &middot; hall 0.31%</div>
+</div>
+<div style="background:#10111c;border:1px solid #1f2937;border-radius:8px;padding:10px 12px">
+  <div style="font-size:0.67rem;color:#7c8898;margin-bottom:3px">Gemini Flash 3</div>
+  <div style="font-size:1.1rem;font-weight:700;line-height:1;color:#fcd34d">3.84s</div>
+  <div style="font-size:0.68rem;color:#7c8898;margin:2px 0">$0.50/1M input</div>
+  <div style="font-size:0.62rem;color:#374151">med 4.07s &middot; p90 4.92s &middot; hall 0.69%</div>
+</div>
+<div style="background:#10111c;border:1px solid #1f2937;border-radius:8px;padding:10px 12px">
+  <div style="font-size:0.67rem;color:#7c8898;margin-bottom:3px">Grok 4 (0709)</div>
+  <div style="font-size:1.1rem;font-weight:700;line-height:1;color:#a78bfa">11.44s</div>
+  <div style="font-size:0.68rem;color:#7c8898;margin:2px 0">$3.00/1M input</div>
+  <div style="font-size:0.62rem;color:#374151">med 8.82s &middot; p90 17.78s</div>
+</div>
+<div style="background:#10111c;border:1px solid #1f2937;border-radius:8px;padding:10px 12px">
+  <div style="font-size:0.67rem;color:#7c8898;margin-bottom:3px">DeepSeek V3-2</div>
+  <div style="font-size:1.1rem;font-weight:700;line-height:1;color:#94a3b8">3.78s</div>
+  <div style="font-size:0.68rem;color:#7c8898;margin:2px 0">$0.28/1M input</div>
+  <div style="font-size:0.62rem;color:#374151">med 3.29s &middot; p90 5.48s</div>
+</div>
+<div style="background:#10111c;border:1px solid #1f2937;border-radius:8px;padding:10px 12px">
+  <div style="font-size:0.67rem;color:#7c8898;margin-bottom:3px">gpt-oss-120B</div>
+  <div style="font-size:1.1rem;font-weight:700;line-height:1;color:#94a3b8">2.39s</div>
+  <div style="font-size:0.68rem;color:#7c8898;margin:2px 0">$0.15/1M input</div>
+  <div style="font-size:0.62rem;color:#374151">med 1.97s &middot; p90 3.41s&nbsp;&nbsp;parse_err 17 &middot; hall 0.31%</div>
+</div>
+</div>
+
+<div class="sbox">
+<div style="font-size:0.9rem;font-weight:700;color:#e2e8f0;margin-bottom:12px">Cost-Performance Tradeoff</div>
+<canvas id="scatter" height="200"></canvas></div>
+
+<div style="font-size:0.95rem;font-weight:700;color:#c084fc;margin-bottom:8px">Scoring</div>
+<div class="scorebox">
+  <strong>Final Score = 0.7 &times; W-CatAvg + 0.3 &times; PEQ</strong><br>
+  Difficulty-weighted category accuracy + synonym-aware parameter extraction quality.<br>
+  <strong>W-CatAvg = &Sigma; w(i) &times; category_accuracy(i)</strong><br>
+  Difficulty-weighted mean &mdash; harder categories (lower mean accuracy) get higher weight. w(i) = (1 &minus; mean_acc(i)) / &Sigma;(1 &minus; mean_acc(j)).<br>
+  <strong>CatAvg</strong> (shown as reference) = unweighted mean of 13 categories, aligned with BFCL standard.<br>
+  1300 cases &middot; 13 categories &middot; 83 skills &middot; Deploy gate: true hallucination &gt;1% = fail
+</div>
+
+<div class="footer" style="color:#e2e8f0">PikaBot LLM Benchmark v5 &middot; March 2026 &middot; <a href="https://attractive-snake.pika.me/benchmark_agent_llm.html" style="color:#60a5fa">View Test Cases &rarr;</a></div>
+</div>
+
+<script>
+const MODELS=[{"name": "Claude Opus 4.6", "short": "Opus 4.6", "tab": "OPUS 4.6", "color": "#c084fc", "cost": 5.0, "final": 79.0}, {"name": "Gemini 3.1 Pro", "short": "G3.1 Pro", "tab": "G3.1 PRO", "color": "#34d399", "cost": 2.0, "final": 78.3}, {"name": "Claude Sonnet 4.6", "short": "Sonnet 4.6", "tab": "SONNET 4.6", "color": "#818cf8", "cost": 3.0, "final": 78.0}, {"name": "Qwen3.5-397B-A17B", "short": "Qwen3.5-397B", "tab": "QWEN3.5-397B", "color": "#fb923c", "cost": 0.39, "final": 77.6}, {"name": "seed-2.0-lite", "short": "seed-2.0-lite", "tab": "SEED-2.0-LITE", "color": "#22d3ee", "cost": 0.25, "final": 77.2}, {"name": "Qwen3-235B-A22B", "short": "Qwen3-235B", "tab": "QWEN3-235B", "color": "#f97316", "cost": 0.2, "final": 76.9}, {"name": "OpenAI o3", "short": "OpenAI o3", "tab": "O3", "color": "#38bdf8", "cost": 2.0, "final": 76.8}, {"name": "GPT-5.4", "short": "GPT-5.4", "tab": "GPT-5.4", "color": "#4ade80", "cost": 2.5, "final": 76.5}, {"name": "Grok 4 (0709)", "short": "Grok 4", "tab": "GROK 4", "color": "#a78bfa", "cost": 3.0, "final": 76.4}, {"name": "ByteDance Seed 1.8", "short": "Seed 1.8", "tab": "SEED 1.8", "color": "#f472b6", "cost": 0.25, "final": 76.2}, {"name": "Kimi K2.5", "short": "Kimi K2.5", "tab": "KIMI K2.5", "color": "#fb7185", "cost": 0.6, "final": 76.1}, {"name": "OpenAI o4-mini", "short": "o4-mini", "tab": "O4-MINI", "color": "#60a5fa", "cost": 1.1, "final": 76.1}, {"name": "Grok 4.1 Fast", "short": "Grok 4.1 Fast", "tab": "GROK 4.1 FAST", "color": "#e879f9", "cost": 0.2, "final": 75.7}, {"name": "Gemini 3.1 Flash Lite", "short": "G3.1 F-Lite", "tab": "G3.1 F-LITE", "color": "#86efac", "cost": 0.25, "final": 75.1}, {"name": "Llama 4 Maverick", "short": "Llama4 Mav.", "tab": "LLAMA4 MAV.", "color": "#f87171", "cost": 0.27, "final": 73.8}, {"name": "DeepSeek V3-2", "short": "DeepSeek V3-2", "tab": "DEEPSEEK V3-2", "color": "#94a3b8", "cost": 0.28, "final": 72.9}, {"name": "Kimi K2", "short": "Kimi K2", "tab": "KIMI K2", "color": "#fbbf24", "cost": 0.6, "final": 72.1}, {"name": "MiniMax M2.5", "short": "MiniMax M2.5", "tab": "MINIMAX M2.5", "color": "#e2e8f0", "cost": 0.3, "final": 72.0}, {"name": "MiniMax M2.7", "short": "MiniMax M2.7", "tab": "MINIMAX M2.7", "color": "#cbd5e1", "cost": 0.3, "final": 71.3}, {"name": "MiMo V2 Pro", "short": "MiMo V2 Pro", "tab": "MIMO V2 PRO", "color": "#a5b4fc", "cost": 1.0, "final": 70.3}, {"name": "GLM-5", "short": "GLM-5", "tab": "GLM-5", "color": "#64748b", "cost": 1.0, "final": 70.2}, {"name": "GLM-5-Turbo", "short": "GLM-5-Turbo", "tab": "GLM-5-TURBO", "color": "#f59e0b", "cost": 1.2, "final": 65.8}, {"name": "Gemini Flash 3", "short": "Flash 3", "tab": "FLASH 3", "color": "#fcd34d", "cost": 0.5, "final": 61.3}, {"name": "gpt-oss-120B", "short": "gpt-oss-120B", "tab": "GPT-OSS-120B", "color": "#94a3b8", "cost": 0.15, "final": 59.6}];
+const CAT_DATA={"Claude Opus 4.6": [91.3, 88.8, 95.4, 76.4, 96.2, 63.5, 89.9, 73.3, 88.2, 87.5, 95.0, 93.8, 92.0], "Gemini 3.1 Pro": [99.1, 70.6, 92.3, 80.9, 95.0, 74.3, 84.8, 87.8, 78.8, 78.8, 93.0, 93.8, 84.0], "Claude Sonnet 4.6": [97.4, 81.1, 92.3, 76.4, 91.2, 63.5, 84.1, 74.4, 87.1, 88.8, 91.0, 90.0, 96.0], "Qwen3.5-397B-A17B": [99.1, 74.1, 91.5, 73.6, 92.5, 73.0, 81.9, 76.7, 88.2, 82.5, 88.0, 85.0, 86.7], "seed-2.0-lite": [95.7, 81.1, 91.5, 74.6, 97.5, 75.7, 87.7, 84.4, 90.6, 85.0, 95.0, 98.8, 85.3], "Qwen3-235B-A22B": [95.7, 82.5, 96.9, 71.8, 93.8, 68.9, 81.2, 71.1, 85.9, 90.0, 95.0, 93.8, 94.7], "OpenAI o3": [98.3, 76.2, 92.3, 82.7, 95.0, 68.9, 85.5, 81.1, 82.3, 85.0, 92.0, 96.2, 86.7], "GPT-5.4": [99.1, 71.3, 93.8, 75.4, 95.0, 60.8, 75.4, 86.7, 84.7, 85.0, 91.0, 90.0, 85.3], "Grok 4 (0709)": [99.2, 72.7, 83.5, 74.6, 92.5, 64.9, 90.6, 89.5, 80.0, 78.8, 89.3, 84.7, 74.7], "ByteDance Seed 1.8": [86.1, 76.9, 90.8, 71.8, 91.2, 67.6, 89.9, 77.8, 75.3, 80.0, 95.0, 95.0, 93.3], "Kimi K2.5": [98.3, 81.8, 96.2, 76.4, 92.5, 60.8, 70.3, 70.0, 83.5, 82.5, 86.0, 86.2, 96.0], "OpenAI o4-mini": [97.4, 71.3, 92.3, 80.0, 91.2, 62.2, 87.0, 82.2, 80.0, 81.2, 91.0, 96.2, 84.0], "Grok 4.1 Fast": [93.9, 83.9, 95.4, 70.9, 92.5, 54.0, 84.8, 71.1, 84.7, 88.8, 81.0, 96.2, 90.7], "Gemini 3.1 Flash Lite": [91.3, 83.2, 96.2, 70.0, 92.5, 59.5, 82.6, 68.9, 81.2, 85.0, 96.0, 87.5, 97.3], "Llama 4 Maverick": [89.6, 81.8, 94.6, 71.8, 95.0, 54.0, 77.5, 72.2, 87.1, 91.2, 89.0, 95.0, 96.0], "DeepSeek V3-2": [95.7, 76.9, 93.1, 65.5, 92.5, 51.3, 71.0, 66.7, 82.3, 90.0, 81.0, 90.0, 90.7], "Kimi K2": [93.0, 69.9, 90.0, 67.3, 91.2, 66.2, 77.5, 76.7, 78.8, 72.5, 75.0, 86.2, 70.7], "MiniMax M2.5": [99.1, 72.7, 82.3, 71.8, 86.2, 59.5, 77.5, 77.8, 80.0, 76.2, 79.0, 82.5, 84.0], "MiniMax M2.7": [99.1, 76.2, 87.7, 76.4, 90.0, 48.6, 76.8, 74.4, 82.3, 83.8, 84.0, 80.0, 89.3], "MiMo V2 Pro": [98.3, 71.3, 94.6, 73.6, 95.0, 46.0, 54.4, 68.9, 87.1, 86.2, 59.0, 75.0, 88.0], "GLM-5": [98.3, 75.5, 87.7, 68.2, 90.0, 50.0, 58.7, 58.9, 85.9, 87.5, 83.0, 75.0, 92.0], "GLM-5-Turbo": [91.3, 57.3, 60.8, 67.3, 90.0, 52.7, 52.9, 70.0, 76.5, 73.8, 59.0, 55.0, 84.0], "Gemini Flash 3": [95.7, 54.5, 78.5, 59.1, 86.2, 43.2, 45.6, 71.1, 65.9, 53.8, 44.0, 71.2, 61.3], "gpt-oss-120B": [91.3, 62.7, 84.6, 64.5, 90.0, 47.3, 52.2, 63.3, 75.3, 72.5, 55.0, 60.0, 73.3]};
+const CAT_IDX=[0, 4, 2, 11, 12, 8, 9, 6, 7, 1, 10, 3, 5];
+const CAT_SHORT=["Ambig", "Format", "Direct", "Param", "SelfCor", "MT-Ctx", "MT-tau", "Implicit", "MissPrm", "Confound", "Parallel", "Edge", "Hall"];
+const RADAR_DS=[{"label": "Opus 4.6", "data": [63.5, 89.9, 95.0, 92.0, 93.8], "borderColor": "#c084fc", "backgroundColor": "#c084fc10", "borderWidth": 1.5, "pointRadius": 2}, {"label": "G3.1 Pro", "data": [74.3, 84.8, 93.0, 84.0, 93.8], "borderColor": "#34d399", "backgroundColor": "#34d39910", "borderWidth": 1.5, "pointRadius": 2}, {"label": "Sonnet 4.6", "data": [63.5, 84.1, 91.0, 96.0, 90.0], "borderColor": "#818cf8", "backgroundColor": "#818cf810", "borderWidth": 1.5, "pointRadius": 2}, {"label": "Qwen3.5-397B", "data": [73.0, 81.9, 88.0, 86.7, 85.0], "borderColor": "#fb923c", "backgroundColor": "#fb923c10", "borderWidth": 1.5, "pointRadius": 2}, {"label": "seed-2.0-lite", "data": [75.7, 87.7, 95.0, 85.3, 98.8], "borderColor": "#22d3ee", "backgroundColor": "#22d3ee10", "borderWidth": 1.5, "pointRadius": 2}, {"label": "Qwen3-235B", "data": [68.9, 81.2, 95.0, 94.7, 93.8], "borderColor": "#f97316", "backgroundColor": "#f9731610", "borderWidth": 1.5, "pointRadius": 2}, {"label": "OpenAI o3", "data": [68.9, 85.5, 92.0, 86.7, 96.2], "borderColor": "#38bdf8", "backgroundColor": "#38bdf810", "borderWidth": 1.5, "pointRadius": 2}, {"label": "GPT-5.4", "data": [60.8, 75.4, 91.0, 85.3, 90.0], "borderColor": "#4ade80", "backgroundColor": "#4ade8010", "borderWidth": 1.5, "pointRadius": 2}, {"label": "Grok 4", "data": [64.9, 90.6, 89.3, 74.7, 84.7], "borderColor": "#a78bfa", "backgroundColor": "#a78bfa10", "borderWidth": 1.5, "pointRadius": 2}, {"label": "Seed 1.8", "data": [67.6, 89.9, 95.0, 93.3, 95.0], "borderColor": "#f472b6", "backgroundColor": "#f472b610", "borderWidth": 1.5, "pointRadius": 2}, {"label": "Kimi K2.5", "data": [60.8, 70.3, 86.0, 96.0, 86.2], "borderColor": "#fb7185", "backgroundColor": "#fb718510", "borderWidth": 1.5, "pointRadius": 2}, {"label": "o4-mini", "data": [62.2, 87.0, 91.0, 84.0, 96.2], "borderColor": "#60a5fa", "backgroundColor": "#60a5fa10", "borderWidth": 1.5, "pointRadius": 2}, {"label": "Grok 4.1 Fast", "data": [54.0, 84.8, 81.0, 90.7, 96.2], "borderColor": "#e879f9", "backgroundColor": "#e879f910", "borderWidth": 1.5, "pointRadius": 2}, {"label": "G3.1 F-Lite", "data": [59.5, 82.6, 96.0, 97.3, 87.5], "borderColor": "#86efac", "backgroundColor": "#86efac10", "borderWidth": 1.5, "pointRadius": 2}, {"label": "Llama4 Mav.", "data": [54.0, 77.5, 89.0, 96.0, 95.0], "borderColor": "#f87171", "backgroundColor": "#f8717110", "borderWidth": 1.5, "pointRadius": 2}, {"label": "DeepSeek V3-2", "data": [51.3, 71.0, 81.0, 90.7, 90.0], "borderColor": "#94a3b8", "backgroundColor": "#94a3b810", "borderWidth": 1.5, "pointRadius": 2}, {"label": "Kimi K2", "data": [66.2, 77.5, 75.0, 70.7, 86.2], "borderColor": "#fbbf24", "backgroundColor": "#fbbf2410", "borderWidth": 1.5, "pointRadius": 2}, {"label": "MiniMax M2.5", "data": [59.5, 77.5, 79.0, 84.0, 82.5], "borderColor": "#e2e8f0", "backgroundColor": "#e2e8f010", "borderWidth": 1.5, "pointRadius": 2}, {"label": "MiniMax M2.7", "data": [48.6, 76.8, 84.0, 89.3, 80.0], "borderColor": "#cbd5e1", "backgroundColor": "#cbd5e110", "borderWidth": 1.5, "pointRadius": 2}, {"label": "MiMo V2 Pro", "data": [46.0, 54.4, 59.0, 88.0, 75.0], "borderColor": "#a5b4fc", "backgroundColor": "#a5b4fc10", "borderWidth": 1.5, "pointRadius": 2}, {"label": "GLM-5", "data": [50.0, 58.7, 83.0, 92.0, 75.0], "borderColor": "#64748b", "backgroundColor": "#64748b10", "borderWidth": 1.5, "pointRadius": 2}, {"label": "GLM-5-Turbo", "data": [52.7, 52.9, 59.0, 84.0, 55.0], "borderColor": "#f59e0b", "backgroundColor": "#f59e0b10", "borderWidth": 1.5, "pointRadius": 2}, {"label": "Flash 3", "data": [43.2, 45.6, 44.0, 61.3, 71.2], "borderColor": "#fcd34d", "backgroundColor": "#fcd34d10", "borderWidth": 1.5, "pointRadius": 2}, {"label": "gpt-oss-120B", "data": [47.3, 52.2, 55.0, 73.3, 60.0], "borderColor": "#94a3b8", "backgroundColor": "#94a3b810", "borderWidth": 1.5, "pointRadius": 2}];
+const SCATTER_DS=[{"label": "Opus 4.6", "data": [{"x": 5.0, "y": 79.0}], "backgroundColor": "#c084fcbb", "borderColor": "#c084fc", "pointRadius": 9.5, "pointHoverRadius": 14}, {"label": "G3.1 Pro", "data": [{"x": 2.0, "y": 78.3}], "backgroundColor": "#34d399bb", "borderColor": "#34d399", "pointRadius": 14.4, "pointHoverRadius": 14}, {"label": "Sonnet 4.6", "data": [{"x": 3.0, "y": 78.0}], "backgroundColor": "#818cf8bb", "borderColor": "#818cf8", "pointRadius": 8.8, "pointHoverRadius": 14}, {"label": "Qwen3.5-397B", "data": [{"x": 0.39, "y": 77.6}], "backgroundColor": "#fb923cbb", "borderColor": "#fb923c", "pointRadius": 13.7, "pointHoverRadius": 14}, {"label": "seed-2.0-lite", "data": [{"x": 0.25, "y": 77.2}], "backgroundColor": "#22d3eebb", "borderColor": "#22d3ee", "pointRadius": 13.5, "pointHoverRadius": 14}, {"label": "Qwen3-235B", "data": [{"x": 0.2, "y": 76.9}], "backgroundColor": "#f97316bb", "borderColor": "#f97316", "pointRadius": 6.8, "pointHoverRadius": 14}, {"label": "OpenAI o3", "data": [{"x": 2.0, "y": 76.8}], "backgroundColor": "#38bdf8bb", "borderColor": "#38bdf8", "pointRadius": 8.3, "pointHoverRadius": 14}, {"label": "GPT-5.4", "data": [{"x": 2.5, "y": 76.5}], "backgroundColor": "#4ade80bb", "borderColor": "#4ade80", "pointRadius": 6.4, "pointHoverRadius": 14}, {"label": "Grok 4", "data": [{"x": 3.0, "y": 76.4}], "backgroundColor": "#a78bfabb", "borderColor": "#a78bfa", "pointRadius": 22.0, "pointHoverRadius": 14}, {"label": "Seed 1.8", "data": [{"x": 0.25, "y": 76.2}], "backgroundColor": "#f472b6bb", "borderColor": "#f472b6", "pointRadius": 15.6, "pointHoverRadius": 14}, {"label": "Kimi K2.5", "data": [{"x": 0.6, "y": 76.1}], "backgroundColor": "#fb7185bb", "borderColor": "#fb7185", "pointRadius": 5.2, "pointHoverRadius": 14}, {"label": "o4-mini", "data": [{"x": 1.1, "y": 76.1}], "backgroundColor": "#60a5fabb", "borderColor": "#60a5fa", "pointRadius": 10.0, "pointHoverRadius": 14}, {"label": "Grok 4.1 Fast", "data": [{"x": 0.2, "y": 75.7}], "backgroundColor": "#e879f9bb", "borderColor": "#e879f9", "pointRadius": 5.2, "pointHoverRadius": 14}, {"label": "G3.1 F-Lite", "data": [{"x": 0.25, "y": 75.1}], "backgroundColor": "#86efacbb", "borderColor": "#86efac", "pointRadius": 5.7, "pointHoverRadius": 14}, {"label": "Llama4 Mav.", "data": [{"x": 0.27, "y": 73.8}], "backgroundColor": "#f87171bb", "borderColor": "#f87171", "pointRadius": 5.9, "pointHoverRadius": 14}, {"label": "DeepSeek V3-2", "data": [{"x": 0.28, "y": 72.9}], "backgroundColor": "#94a3b8bb", "borderColor": "#94a3b8", "pointRadius": 9.9, "pointHoverRadius": 14}, {"label": "Kimi K2", "data": [{"x": 0.6, "y": 72.1}], "backgroundColor": "#fbbf24bb", "borderColor": "#fbbf24", "pointRadius": 18.0, "pointHoverRadius": 14}, {"label": "MiniMax M2.5", "data": [{"x": 0.3, "y": 72.0}], "backgroundColor": "#e2e8f0bb", "borderColor": "#e2e8f0", "pointRadius": 18.5, "pointHoverRadius": 14}, {"label": "MiniMax M2.7", "data": [{"x": 0.3, "y": 71.3}], "backgroundColor": "#cbd5e1bb", "borderColor": "#cbd5e1", "pointRadius": 11.1, "pointHoverRadius": 14}, {"label": "MiMo V2 Pro", "data": [{"x": 1.0, "y": 70.3}], "backgroundColor": "#a5b4fcbb", "borderColor": "#a5b4fc", "pointRadius": 9.8, "pointHoverRadius": 14}, {"label": "GLM-5", "data": [{"x": 1.0, "y": 70.2}], "backgroundColor": "#64748bbb", "borderColor": "#64748b", "pointRadius": 5.1, "pointHoverRadius": 14}, {"label": "GLM-5-Turbo", "data": [{"x": 1.2, "y": 65.8}], "backgroundColor": "#f59e0bbb", "borderColor": "#f59e0b", "pointRadius": 15.3, "pointHoverRadius": 14}, {"label": "Flash 3", "data": [{"x": 0.5, "y": 61.3}], "backgroundColor": "#fcd34dbb", "borderColor": "#fcd34d", "pointRadius": 10.0, "pointHoverRadius": 14}, {"label": "gpt-oss-120B", "data": [{"x": 0.15, "y": 59.6}], "backgroundColor": "#94a3b8bb", "borderColor": "#94a3b8", "pointRadius": 7.8, "pointHoverRadius": 14}];
+
+// Radar legend
+const rleg=document.getElementById('rleg');
+MODELS.forEach(m=>{
+  const d=document.createElement('div');d.className='rleg';
+  d.innerHTML=`<span class="rdot" style="background:${m.color}"></span>${m.short}`;
+  rleg.appendChild(d);
+});
+
+// Radar chart
+new Chart(document.getElementById('radar').getContext('2d'),{
+  type:'radar',
+  data:{labels:['Hallucination Check','Implicit Routing','Parallel Skills','Self Correction','Param Extraction'],datasets:RADAR_DS},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{r:{min:0,max:100,ticks:{display:false},grid:{color:'#1f2937'},angleLines:{color:'#1f2937'},
+      pointLabels:{color:'#9ca3af',font:{size:10},padding:2}}}
+  }
+});
+
+// Category table
+function cvColor(v){
+  if(v>=90)return'#4ade80';if(v>=80)return'#93c5fd';
+  if(v>=70)return'#fcd34d';if(v>=55)return'#fdba74';return'#fca5a5';
+}
+function renderCat(){
+  const vis=MODELS;
+  document.getElementById('cthead').innerHTML='<th class="ch">Category</th>'+
+    vis.map(m=>`<th style="color:${m.color}">${m.tab}</th>`).join('');
+  const tb=document.getElementById('ctbody');tb.innerHTML='';
+  CAT_IDX.forEach((ci,ri)=>{
+    const tr=document.createElement('tr');
+    let h=`<td class="cn">${CAT_SHORT[ri]}</td>`;
+    vis.forEach(m=>{
+      const v=(CAT_DATA[m.name]||[])[ci]||0;
+      const barW=Math.max(6,Math.round(v*0.5));
+      const bar=`<span style="display:inline-block;width:${barW}px;height:3px;background:${m.color};vertical-align:middle;margin-right:3px;border-radius:1px;opacity:0.75"></span>`;
+      h+=`<td><span style="white-space:nowrap">${bar}<span style="color:${cvColor(v)};font-weight:700;font-size:0.8rem">${Math.round(v)}%</span></span></td>`;
+    });
+    tr.innerHTML=h;tb.appendChild(tr);
+  });
+}
+renderCat();
+
+// Scatter
+new Chart(document.getElementById('scatter').getContext('2d'),{
+  type:'scatter',
+  data:{datasets:SCATTER_DS},
+  options:{responsive:true,maintainAspectRatio:true,aspectRatio:3,
+    plugins:{legend:{display:true,position:'top',labels:{color:'#bcc3cf',font:{size:11,weight:'500'},boxWidth:10,padding:8}},
+      tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.raw.y}%  $${ctx.raw.x}/1M`}}
+    },
+    scales:{
+      x:{title:{display:true,text:'Input Cost ($/1M tokens)',color:'#4b5563'},grid:{color:'#111827'},ticks:{color:'#4b5563'}},
+      y:{title:{display:true,text:'Final Score (%)',color:'#4b5563'},min:55,max:82,grid:{color:'#111827'},ticks:{color:'#4b5563'}}
+    }
+  }
+});
+</script>
+</body>
+</html>
